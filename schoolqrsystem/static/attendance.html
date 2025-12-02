@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Presensi - Sistem QR Sekolah</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="static/style.css">
+    <style>
+        .filter-section {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .date-filter {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .attendance-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .present-badge {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .late-badge {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .absent-badge {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-school me-2 text-primary"></i>
+                School QR System
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">
+                            <i class="fas fa-home me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/scanner">
+                            <i class="fas fa-qrcode me-1"></i> Scanner
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/register">
+                            <i class="fas fa-user-plus me-1"></i> Daftar Siswa
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/attendance">
+                            <i class="fas fa-clipboard-list me-1"></i> Presensi
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="h3 fw-bold mb-1">
+                    <i class="fas fa-clipboard-list text-primary me-2"></i>
+                    Data Presensi Siswa
+                </h1>
+                <p class="text-muted mb-0">Lihat dan kelola data kehadiran siswa</p>
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="refreshData()">
+                    <i class="fas fa-sync-alt me-2"></i>Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Tanggal Mulai</label>
+                    <input type="date" id="startDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Tanggal Akhir</label>
+                    <input type="date" id="endDate" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Kelas</label>
+                    <select id="classFilter" class="form-select">
+                        <option value="">Semua Kelas</option>
+                        <option value="X IPA 1">X IPA 1</option>
+                        <option value="X IPA 2">X IPA 2</option>
+                        <option value="XI IPA 1">XI IPA 1</option>
+                        <option value="XII IPA 1">XII IPA 1</option>
+                        <option value="X IPS 1">X IPS 1</option>
+                        <option value="XI IPS 1">XI IPS 1</option>
+                        <option value="XII IPS 1">XII IPS 1</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Status</label>
+                    <select id="statusFilter" class="form-select">
+                        <option value="">Semua Status</option>
+                        <option value="present">Hadir Tepat Waktu</option>
+                        <option value="late">Hadir Terlambat</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <button class="btn btn-primary me-2" onclick="applyFilters()">
+                        <i class="fas fa-filter me-2"></i>Terapkan Filter
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="clearFilters()">
+                        <i class="fas fa-times me-2"></i>Reset Filter
+                    </button>
+                    
+                    <div class="export-buttons mt-3">
+                        <button class="btn btn-success" onclick="exportToCSV()">
+                            <i class="fas fa-file-csv me-2"></i>Export CSV
+                        </button>
+                        <button class="btn btn-danger" onclick="exportToPDF()">
+                            <i class="fas fa-file-pdf me-2"></i>Export PDF
+                        </button>
+                        <button class="btn btn-info" onclick="printTable()">
+                            <i class="fas fa-print me-2"></i>Cetak Laporan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Summary -->
+        <div class="stats-summary">
+            <div class="stat-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Total Presensi</h6>
+                        <h3 class="mb-0" id="totalAttendance">0</h3>
+                    </div>
+                    <i class="fas fa-clipboard-check fa-2x text-primary"></i>
+                </div>
+            </div>
+            
+            <div class="stat-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Hadir Tepat Waktu</h6>
+                        <h3 class="mb-0" id="totalPresent">0</h3>
+                    </div>
+                    <i class="fas fa-check-circle fa-2x text-success"></i>
+                </div>
+            </div>
+            
+            <div class="stat-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Hadir Terlambat</h6>
+                        <h3 class="mb-0" id="totalLate">0</h3>
+                    </div>
+                    <i class="fas fa-clock fa-2x text-warning"></i>
+                </div>
+            </div>
+            
+            <div class="stat-item">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-muted mb-1">Rata-rata Kehadiran</h6>
+                        <h3 class="mb-0" id="attendanceRate">0%</h3>
+                    </div>
+                    <i class="fas fa-chart-line fa-2x text-info"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Table -->
+        <div class="attendance-table">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0" id="attendanceTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Siswa</th>
+                            <th>Kelas</th>
+                            <th>ID Siswa</th>
+                            <th>Tanggal</th>
+                            <th>Waktu</th>
+                            <th>Status</th>
+                            <th>Lokasi</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendanceTableBody">
+                        <!-- Data akan diisi oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>
+                <span id="paginationInfo" class="text-muted"></span>
+            </div>
+            <div>
+                <button class="btn btn-outline-primary btn-sm" id="prevPage" disabled>
+                    <i class="fas fa-chevron-left"></i> Sebelumnya
+                </button>
+                <span class="mx-2" id="pageInfo">Halaman 1</span>
+                <button class="btn btn-outline-primary btn-sm" id="nextPage" disabled>
+                    Selanjutnya <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Memuat data presensi...</p>
+        </div>
+
+        <!-- No Data Message -->
+        <div id="noDataMessage" class="text-center py-5" style="display: none;">
+            <i class="fas fa-clipboard fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">Tidak ada data presensi</h5>
+            <p class="text-muted">Gunakan scanner untuk merekam presensi pertama</p>
+            <a href="/scanner" class="btn btn-primary mt-2">
+                <i class="fas fa-qrcode me-2"></i>Buka Scanner
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer mt-5">
+        <div class="container">
+            <div class="text-center">
+                <p class="mb-0">© 2024 Sistem Presensi QR Code Sekolah</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let allAttendanceData = [];
+        let currentPage = 1;
+        const itemsPerPage = 15;
+        let filteredData = [];
+
+        // Load attendance data
+        async function loadAttendanceData() {
+            try {
+                showLoading(true);
+                
+                const response = await fetch('/attendance-records');
+                const data = await response.json();
+                
+                if (data.success) {
+                    allAttendanceData = data.attendance;
+                    filteredData = [...allAttendanceData];
+                    updateStatistics();
+                    renderTable();
+                    updatePagination();
+                } else {
+                    showNoData();
+                }
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+                showNoData();
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // Update statistics
+        function updateStatistics() {
+            const total = filteredData.length;
+            const present = filteredData.filter(item => item.status === 'present').length;
+            const late = filteredData.filter(item => item.status === 'late').length;
+            
+            // Get total students (simulated)
+            const totalStudents = 50; // This should come from API
+            const attendanceRate = totalStudents > 0 ? Math.round((total / totalStudents) * 100) : 0;
+            
+            document.getElementById('totalAttendance').textContent = total;
+            document.getElementById('totalPresent').textContent = present;
+            document.getElementById('totalLate').textContent = late;
+            document.getElementById('attendanceRate').textContent = attendanceRate + '%';
+        }
+
+        // Render table
+        function renderTable() {
+            const tbody = document.getElementById('attendanceTableBody');
+            tbody.innerHTML = '';
+            
+            if (filteredData.length === 0) {
+                showNoData();
+                return;
+            }
+            
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageData = filteredData.slice(startIndex, endIndex);
+            
+            pageData.forEach((record, index) => {
+                const rowNumber = startIndex + index + 1;
+                const dateTime = record.timestamp.split(' ');
+                const date = dateTime[0] || '';
+                const time = dateTime[1] || '';
+                
+                // Determine status badge
+                let statusBadge = '';
+                if (record.status === 'present') {
+                    statusBadge = '<span class="status-badge present-badge">Tepat Waktu</span>';
+                } else if (record.status === 'late') {
+                    statusBadge = '<span class="status-badge late-badge">Terlambat</span>';
+                } else {
+                    statusBadge = `<span class="status-badge absent-badge">${record.status}</span>`;
+                }
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${rowNumber}</td>
+                    <td><strong>${record.student_name}</strong></td>
+                    <td>${record.class_name || 'Unknown'}</td>
+                    <td><code>${record.student_id}</code></td>
+                    <td>${date}</td>
+                    <td>${time}</td>
+                    <td>${statusBadge}</td>
+                    <td>${record.location || 'Sekolah'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary" onclick="viewStudentDetail('${record.student_id}')">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteAttendance(${record.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Apply filters
+        function applyFilters() {
+            filteredData = [...allAttendanceData];
+            
+            // Date filter
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (startDate) {
+                filteredData = filteredData.filter(item => {
+                    const itemDate = item.timestamp.split(' ')[0];
+                    return itemDate >= startDate;
+                });
+            }
+            
+            if (endDate) {
+                filteredData = filteredData.filter(item => {
+                    const itemDate = item.timestamp.split(' ')[0];
+                    return itemDate <= endDate;
+                });
+            }
+            
+            // Class filter
+            const classFilter = document.getElementById('classFilter').value;
+            if (classFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.class_name && item.class_name.includes(classFilter)
+                );
+            }
+            
+            // Status filter
+            const statusFilter = document.getElementById('statusFilter').value;
+            if (statusFilter) {
+                filteredData = filteredData.filter(item => item.status === statusFilter);
+            }
+            
+            currentPage = 1;
+            updateStatistics();
+            renderTable();
+            updatePagination();
+        }
+
+        // Clear filters
+        function clearFilters() {
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            document.getElementById('classFilter').value = '';
+            document.getElementById('statusFilter').value = '';
+            
+            filteredData = [...allAttendanceData];
+            currentPage = 1;
+            updateStatistics();
+            renderTable();
+            updatePagination();
+        }
+
+        // Update pagination
+        function updatePagination() {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+            const pageInfo = document.getElementById('pageInfo');
+            const paginationInfo = document.getElementById('paginationInfo');
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+            
+            pageInfo.textContent = `Halaman ${currentPage} dari ${totalPages}`;
+            paginationInfo.textContent = `Menampilkan ${Math.min(itemsPerPage, filteredData.length)} dari ${filteredData.length} data`;
+        }
+
+        // Pagination event handlers
+        document.getElementById('prevPage').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+                updatePagination();
+            }
+        });
+
+        document.getElementById('nextPage').addEventListener('click', () => {
+            const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderTable();
+                updatePagination();
+            }
+        });
+
+        // Show/hide loading
+        function showLoading(show) {
+            document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+        }
+
+        // Show no data message
+        function showNoData() {
+            document.getElementById('noDataMessage').style.display = 'block';
+            document.getElementById('attendanceTable').style.display = 'none';
+        }
+
+        // Hide no data message
+        function hideNoData() {
+            document.getElementById('noDataMessage').style.display = 'none';
+            document.getElementById('attendanceTable').style.display = 'table';
+        }
+
+        // Refresh data
+        function refreshData() {
+            loadAttendanceData();
+        }
+
+        // View student detail
+        function viewStudentDetail(studentId) {
+            window.location.href = `/student/${studentId}`;
+        }
+
+        // Delete attendance record
+        async function deleteAttendance(attendanceId) {
+            if (confirm('Apakah Anda yakin ingin menghapus data presensi ini?')) {
+                try {
+                    // Note: You need to implement this endpoint in backend
+                    const response = await fetch(`/attendance/${attendanceId}`, {
+                        method: 'DELETE'
+                    });
+                    
+                    if (response.ok) {
+                        alert('Data presensi berhasil dihapus');
+                        loadAttendanceData();
+                    } else {
+                        alert('Gagal menghapus data presensi');
+                    }
+                } catch (error) {
+                    alert('Error: ' + error.message);
+                }
+            }
+        }
+
+        // Export functions (simulated for now)
+        function exportToCSV() {
+            alert('Fitur export CSV akan segera tersedia!');
+            // Implement CSV export logic here
+        }
+
+        function exportToPDF() {
+            alert('Fitur export PDF akan segera tersedia!');
+            // Implement PDF export logic here
+        }
+
+        function printTable() {
+            window.print();
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAttendanceData();
+            
+            // Set default dates (last 7 days)
+            const end = new Date();
+            const start = new Date();
+            start.setDate(start.getDate() - 7);
+            
+            document.getElementById('startDate').valueAsDate = start;
+            document.getElementById('endDate').valueAsDate = end;
+            
+            // Auto-refresh every 60 seconds
+            setInterval(loadAttendanceData, 60000);
+        });
+    </script>
+</body>
+</html>
