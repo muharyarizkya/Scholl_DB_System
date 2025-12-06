@@ -1,8 +1,0 @@
-fastapi>=0.111.0
-uvicorn[standard]>=0.29.0
-sqlalchemy>=2.0.0
-pydantic>=2.0.0
-qrcode[pil]>=7.0.0
-python-multipart>=0.0.6
-qrcode[pil]>=7.4
-html5lib>=1.1
