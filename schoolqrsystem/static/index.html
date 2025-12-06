@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Presensi QR Sekolah</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }   
+
+        .container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        input,
+        select {
+            padding: 8px;
+            margin: 5px;
+            width: 200px;
+        }
+
+        .result-box {
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .success-box {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error-box {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .info-box {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .qr-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border: 2px dashed #007bff;
+        }
+
+        .qr-image {
+            max-width: 200px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background: white;
+        }
+
+        .student-card {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+
+        .action-buttons {
+            margin: 10px 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+
+        .btn i {
+            font-size: 16px;
+        }
+        
+        /* Styling untuk table riwayat presensi */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+        }
+        
+        table th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .status-present {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-late {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        .status-absent {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+    </style>
+    <!-- Tambahkan Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <h1>🏫 Sistem Presensi QR Sekolah</h1>
+
+    <div class="container">
+        <h2>📊 Statistik</h2>
+        <div id="stats">Memuat...</div>
+    </div>
+
+    <div class="container">
+        <h2>👨‍🎓 Pendaftaran Siswa</h2>
+        <input type="text" id="studentId" placeholder="ID Siswa" required>
+        <input type="text" id="studentName" placeholder="Nama Lengkap" required>
+        <input type="text" id="className" placeholder="Kelas" required>
+        <button onclick="registerStudent()">Daftarkan Siswa</button>
+        <div id="registerResult"></div>
+    </div>
+
+    <!-- TAMBAHAN: DAFTAR SISWA DENGAN QR CODE -->
+    <div class="container">
+        <h2>🎫 Daftar Siswa & QR Code</h2>
+        <button onclick="loadStudents()" class="btn-success">📋 </button>
+        <div id="studentsList"></div>
+    </div>
+
+    <!-- Container Scanner Kamera -->
+    <div class="container">
+        <h2>📷 Presensi dengan Scanner Kamera</h2>
+        <p>Gunakan kamera laptop/HP untuk scan QR Code siswa:</p>
+        <button onclick="openCameraScanner()" class="btn-primary">
+            <span>📷</span> Buka Scanner Kamera
+        </button>
+        <p><small>Scanner akan terbuka di window/tab baru</small></p>
+    </div>
+
+    <!-- Container Manajemen Data (SISWA SAJA) -->
+    <div class="card">
+        <h3><i class="fas fa-users-cog"></i> Manajemen Data Siswa</h3>
+        <p>Kelola data siswa secara lengkap</p>
+        <div class="btn-group">
+        <a href="/static/student_management.html" class="btn btn-primary">
+            <i class="fas fa-users"></i> Kelola Siswa
+        </a>
+        </div>
+    </div>
+
+    <!-- Container Riwayat Presensi (DI SINI BERSAMA DENGAN TOMBOL LOAD) -->
+    <div class="container">
+        <h2>📋 Riwayat Presensi</h2>
+        <button onclick="loadAttendance()">Muat Riwayat</button>
+        <div id="attendanceList">
+            <!-- Data riwayat presensi akan dimuat di sini -->
+        </div>
+    </div>
+
+    <script>
+        // Load stats
+        async function loadStats() {
+            try {
+                const response = await fetch('/stats');
+                const data = await response.json();
+                if (data.success) {
+                    const stats = data.stats;
+                    document.getElementById('stats').innerHTML = `
+                        <p>Total Siswa: <strong>${stats.total_students}</strong></p>
+                        <p>Siswa Aktif: <strong>${stats.active_students}</strong></p>
+                        <p>Presensi Hari Ini: <strong>${stats.today_attendance}</strong></p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Register student
+        async function registerStudent() {
+            const studentId = document.getElementById('studentId').value;
+            const studentName = document.getElementById('studentName').value;
+            const className = document.getElementById('className').value;
+
+            if (!studentId || !studentName || !className) {
+                alert('Harap isi semua field!');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('student_id', studentId);
+            formData.append('name', studentName);
+            formData.append('class_name', className);
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                const resultDiv = document.getElementById('registerResult');
+                if (result.success) {
+                    resultDiv.innerHTML = `
+                        <div class="result-box success-box">
+                            <h3>✅ ${result.message}</h3>
+                            <p><strong>ID:</strong> ${result.student.id}</p>
+                            <p><strong>Nama:</strong> ${result.student.name}</p>
+                            <p><strong>Kelas:</strong> ${result.student.class_name}</p>
+                            <div class="action-buttons">
+                                <button onclick="viewQRCode('${studentId}')" class="btn-success">👁️ Lihat QR Code</button>
+                                <button onclick="downloadQRCode('${studentId}')" class="btn-success">📥 Download QR Code</button>
+                            </div>
+                        </div>
+                    `;
+                    // Clear form
+                    document.getElementById('studentId').value = '';
+                    document.getElementById('studentName').value = '';
+                    document.getElementById('className').value = '';
+                    loadStats(); // Refresh stats
+                } else {
+                    resultDiv.innerHTML = `<div class="result-box error-box">❌ ${result.message}</div>`;
+                }
+            } catch (error) {
+                document.getElementById('registerResult').innerHTML = `<div class="result-box error-box">Error: ${error}</div>`;
+            }
+        }
+
+        // Load daftar siswa dengan QR Code
+        async function loadStudents() {
+            try {
+                const response = await fetch('/students');
+                const data = await response.json();
+
+                const listDiv = document.getElementById('studentsList');
+                if (data.success && data.students.length > 0) {
+                    let html = '<div class="info-box">';
+                    html += `<p><strong>Total: ${data.students.length} siswa terdaftar</strong></p>`;
+                    html += '</div>';
+
+                    data.students.forEach(student => {
+                        html += `
+                            <div class="student-card">
+                                <h4>${student.name} (${student.student_id})</h4>
+                                <p><strong>Kelas:</strong> ${student.class_name}</p>
+                                <p><strong>Status:</strong> ${student.is_active ? '🟢 Aktif' : '🔴 Tidak Aktif'}</p>
+                                <div class="action-buttons">
+                                    <button onclick="viewQRCode('${student.student_id}')" class="btn-success">👁️ Lihat QR Code</button>
+                                    <button onclick="downloadQRCode('${student.student_id}')" class="btn-success">📥 Download QR</button>
+                                </div>
+                                <div id="qr-display-${student.student_id}"></div>
+                            </div>
+                        `;
+                    });
+
+                    listDiv.innerHTML = html;
+                } else {
+                    listDiv.innerHTML = '<div class="result-box info-box">Tidak ada siswa terdaftar.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading students:', error);
+                document.getElementById('studentsList').innerHTML = `<div class="result-box error-box">Error: ${error}</div>`;
+            }
+        }
+
+        // Lihat QR Code di browser
+        async function viewQRCode(studentId) {
+            const qrDiv = document.getElementById(`qr-display-${studentId}`);
+            if (!qrDiv) {
+                // Jika tidak ada div khusus, buat di result
+                const resultDiv = document.getElementById('registerResult');
+                resultDiv.innerHTML = `<div class="result-box info-box">Memuat QR Code untuk ${studentId}...</div>`;
+            }
+
+            try {
+                const response = await fetch(`/qrcode-view/${studentId}`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const imageUrl = URL.createObjectURL(blob);
+
+                    const qrContainer = qrDiv || document.getElementById('registerResult');
+                    qrContainer.innerHTML = `
+                        <div class="qr-container">
+                            <h4>🎫 QR Code - ${studentId}</h4>
+                            <img src="${imageUrl}" alt="QR Code ${studentId}" class="qr-image">
+                            <br>
+                            <button onclick="downloadQRCode('${studentId}')" class="btn-success">📥 Download QR Code</button>
+                            <button onclick="printQRCode('${studentId}')" class="btn-success">🖨️ Cetak QR Code</button>
+                        </div>
+                    `;
+                } else {
+                    const errorDiv = qrDiv || document.getElementById('registerResult');
+                    errorDiv.innerHTML = `<div class="result-box error-box">❌ Gagal memuat QR Code</div>`;
+                }
+            } catch (error) {
+                const errorDiv = qrDiv || document.getElementById('registerResult');
+                errorDiv.innerHTML = `<div class="result-box error-box">Error: ${error}</div>`;
+            }
+        }
+
+        // Download QR Code
+        async function downloadQRCode(studentId) {
+            try {
+                const response = await fetch(`/qrcode/${studentId}`);
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = `qr_${studentId}.png`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    // Tampilkan pesan sukses
+                    alert(`✅ QR Code untuk ${studentId} berhasil didownload!`);
+                } else {
+                    alert('❌ Gagal mendownload QR Code');
+                }
+            } catch (error) {
+                alert(`❌ Error: ${error}`);
+            }
+        }
+
+        // Print QR Code
+        function printQRCode(studentId) {
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>QR Code - ${studentId}</title>
+                        <style>
+                            body { 
+                                font-family: Arial; 
+                                text-align: center; 
+                                padding: 20px;
+                            }
+                            .qr-container { 
+                                margin: 20px auto; 
+                                max-width: 300px;
+                            }
+                            img { 
+                                max-width: 100%; 
+                                border: 1px solid #ddd;
+                                padding: 10px;
+                            }
+                            .student-info {
+                                margin: 10px 0;
+                                padding: 10px;
+                                background: #f5f5f5;
+                                border-radius: 5px;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <h2>🎫 QR Code Presensi</h2>
+                        <div class="student-info">
+                            <p><strong>ID Siswa:</strong> ${studentId}</p>
+                            <p><strong>Scan QR code untuk presensi</strong></p>
+                        </div>
+                        <div class="qr-container">
+                            <img src="${window.location.origin}/qrcode-view/${studentId}" alt="QR Code">
+                        </div>
+                        <p><small>Sistem Presensi QR Sekolah</small></p>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+
+        // Buka Scanner Kamera
+        function openCameraScanner() {
+            window.open('/static/scanner.html', '_blank', 'width=1000,height=800');
+        }
+
+        // Load attendance records dengan tampilan tabel yang lebih baik
+        async function loadAttendance() {
+            try {
+                const response = await fetch('/attendance-records');
+                const data = await response.json();
+
+                const listDiv = document.getElementById('attendanceList');
+                if (data.success && data.attendance.length > 0) {
+                    let html = '<table>';
+                    html += '<thead><tr><th>Siswa</th><th>ID Siswa</th><th>Waktu</th><th>Status</th><th>Lokasi</th></tr></thead><tbody>';
+
+                    data.attendance.forEach(record => {
+                        const statusClass = record.status === 'present' ? 'status-present' : 
+                                          record.status === 'late' ? 'status-late' : 'status-absent';
+                        
+                        const statusText = record.status === 'present' ? 'Tepat Waktu' : 
+                                         record.status === 'late' ? 'Telat' : 'Absen';
+
+                        html += `
+                            <tr>
+                                <td>${record.student_name}</td>
+                                <td>${record.student_id}</td>
+                                <td>${record.timestamp}</td>
+                                <td><span class="${statusClass}">${statusText}</span></td>
+                                <td>${record.location || '-'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table>';
+                    listDiv.innerHTML = html;
+                } else {
+                    listDiv.innerHTML = '<div class="result-box info-box">Tidak ada data presensi.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading attendance:', error);
+                listDiv.innerHTML = '<div class="result-box error-box">Error memuat data presensi.</div>';
+            }
+        }
+
+        // Load stats on page load
+        loadStats();
+
+        // Enter key support untuk form pendaftaran
+        document.getElementById('className').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                registerStudent();
+            }
+        });
+    </script>
+</body>
+
+</html>

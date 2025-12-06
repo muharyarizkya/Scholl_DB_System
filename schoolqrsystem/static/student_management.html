@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajemen Siswa - School QR System</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4CAF50;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        
+        .btn-secondary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #2980b9;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d68910;
+        }
+        
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .students-table th {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            text-align: left;
+        }
+        
+        .students-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .students-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .status-active {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .status-inactive {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .close {
+            font-size: 28px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .close:hover {
+            color: #34495e;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #34495e;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .search-box {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-users"></i> Manajemen Siswa</h1>
+            <div class="btn-group">
+                <!-- PERUBAHAN DI SINI: Mengarah ke index.html -->
+                <a href="/static/index.html" class="btn btn-secondary">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="/static/student_registration.html" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Tambah Siswa Baru
+                </a>
+            </div>
+        </div>
+        
+        <div id="alert" class="alert"></div>
+        
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Cari siswa berdasarkan nama atau ID..." onkeyup="searchStudents()">
+            <button class="btn btn-primary" onclick="loadStudents()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+        
+        <table class="students-table" id="studentsTable">
+            <thead>
+                <tr>
+                    <th>ID Siswa</th>
+                    <th>Nama</th>
+                    <th>Kelas</th>
+                    <th>Status</th>
+                    <th>Tanggal Daftar</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="studentsTableBody">
+                <!-- Data akan diisi oleh JavaScript -->
+            </tbody>
+        </table>
+        
+        <div id="noData" class="no-data" style="display: none;">
+            <i class="fas fa-user-slash fa-3x"></i>
+            <h3>Tidak ada data siswa</h3>
+            <p>Klik "Tambah Siswa Baru" untuk menambahkan siswa pertama</p>
+        </div>
+    </div>
+    
+    <!-- Modal Edit Siswa -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-edit"></i> Edit Data Siswa</h2>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            <form id="editForm">
+                <div class="form-group">
+                    <label for="editStudentId">ID Siswa</label>
+                    <input type="text" id="editStudentId" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="editName">Nama Lengkap *</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editClassName">Kelas *</label>
+                    <input type="text" id="editClassName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editIsActive">Status</label>
+                    <select id="editIsActive">
+                        <option value="true">Aktif</option>
+                        <option value="false">Tidak Aktif</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Konfirmasi Hapus -->
+    <div id="deleteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-exclamation-triangle"></i> Konfirmasi Hapus</h2>
+                <span class="close" onclick="closeDeleteModal()">&times;</span>
+            </div>
+            <div class="form-group">
+                <p id="deleteMessage">Apakah Anda yakin ingin menghapus siswa ini?</p>
+                <p><strong>Peringatan:</strong> Semua data presensi siswa ini juga akan dihapus!</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Batal</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDelete()">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentStudentId = null;
+        
+        // Load data siswa saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStudents();
+        });
+        
+        // Fungsi untuk memuat data siswa
+        async function loadStudents() {
+            try {
+                const response = await fetch('/students');
+                const data = await response.json();
+                
+                if (data.success) {
+                    displayStudents(data.students);
+                } else {
+                    showAlert('Gagal memuat data siswa', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Koneksi error. Periksa server.', 'danger');
+            }
+        }
+        
+        // Fungsi untuk menampilkan data siswa di tabel
+        function displayStudents(students) {
+            const tableBody = document.getElementById('studentsTableBody');
+            const noDataDiv = document.getElementById('noData');
+            
+            if (students.length === 0) {
+                tableBody.innerHTML = '';
+                document.getElementById('studentsTable').style.display = 'none';
+                noDataDiv.style.display = 'block';
+                return;
+            }
+            
+            document.getElementById('studentsTable').style.display = 'table';
+            noDataDiv.style.display = 'none';
+            
+            tableBody.innerHTML = '';
+            
+            students.forEach(student => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${student.student_id}</td>
+                    <td>${student.name}</td>
+                    <td>${student.class_name}</td>
+                    <td>
+                        <span class="${student.is_active ? 'status-active' : 'status-inactive'}">
+                            <i class="fas ${student.is_active ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+                            ${student.is_active ? 'Aktif' : 'Tidak Aktif'}
+                        </span>
+                    </td>
+                    <td>${new Date(student.created_at).toLocaleDateString('id-ID')}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-secondary" onclick="viewStudent('${student.student_id}')" title="Lihat Detail">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-warning" onclick="openEditModal('${student.student_id}')" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger" onclick="openDeleteModal('${student.student_id}', '${student.name}')" title="Hapus">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            <button class="btn ${student.is_active ? 'btn-danger' : 'btn-success'}" onclick="toggleStudentStatus('${student.student_id}')" title="${student.is_active ? 'Nonaktifkan' : 'Aktifkan'}">
+                                <i class="fas ${student.is_active ? 'fa-user-slash' : 'fa-user-check'}"></i>
+                            </button>
+                            <a href="/qrcode-view/${student.student_id}" class="btn btn-primary" title="Lihat QR Code" target="_blank">
+                                <i class="fas fa-qrcode"></i>
+                            </a>
+                        </div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Fungsi pencarian
+        function searchStudents() {
+            const input = document.getElementById('searchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#studentsTableBody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(input) ? '' : 'none';
+            });
+        }
+        
+        // Fungsi untuk melihat detail siswa
+        function viewStudent(studentId) {
+            // Arahkan langsung ke file di static folder
+            window.location.href = `/static/student_detail.html?student_id=${studentId}`;
+        }
+        
+        // ============ FUNGSI EDIT ============
+        // Fungsi untuk membuka modal edit
+        async function openEditModal(studentId) {
+            try {
+                const response = await fetch(`/student/${studentId}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const student = data.student;
+                    document.getElementById('editStudentId').value = student.student_id;
+                    document.getElementById('editName').value = student.name;
+                    document.getElementById('editClassName').value = student.class_name;
+                    document.getElementById('editIsActive').value = student.is_active ? 'true' : 'false';
+                    
+                    currentStudentId = studentId;
+                    document.getElementById('editModal').style.display = 'block';
+                } else {
+                    showAlert('Gagal memuat data siswa', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error memuat data siswa', 'danger');
+            }
+        }
+        
+        // Fungsi untuk menutup modal edit
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentStudentId = null;
+        }
+        
+        // Fungsi untuk menyimpan perubahan data siswa
+        document.getElementById('editForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('name', document.getElementById('editName').value);
+            formData.append('class_name', document.getElementById('editClassName').value);
+            formData.append('is_active', document.getElementById('editIsActive').value);
+            
+            try {
+                const response = await fetch(`/students/${currentStudentId}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    closeEditModal();
+                    loadStudents();
+                } else {
+                    showAlert(data.message || 'Gagal mengupdate data', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error mengupdate data', 'danger');
+            }
+        });
+        
+        // ============ FUNGSI HAPUS ============
+        // Fungsi untuk membuka modal konfirmasi hapus
+        function openDeleteModal(studentId, studentName) {
+            currentStudentId = studentId;
+            document.getElementById('deleteMessage').innerHTML = 
+                `Apakah Anda yakin ingin menghapus siswa <strong>${studentName}</strong> (ID: ${studentId})?`;
+            document.getElementById('deleteModal').style.display = 'block';
+        }
+        
+        // Fungsi untuk menutup modal hapus
+        function closeDeleteModal() {
+            document.getElementById('deleteModal').style.display = 'none';
+            currentStudentId = null;
+        }
+        
+        // Fungsi untuk konfirmasi hapus
+        async function confirmDelete() {
+            try {
+                const response = await fetch(`/students/${currentStudentId}`, {
+                    method: 'DELETE'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    closeDeleteModal();
+                    loadStudents();
+                } else {
+                    showAlert(data.message || 'Gagal menghapus data', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error menghapus data', 'danger');
+            }
+        }
+        
+        // ============ FUNGSI TOGGLE STATUS ============
+        // Fungsi untuk toggle status siswa
+        async function toggleStudentStatus(studentId) {
+            try {
+                const response = await fetch(`/student/${studentId}/toggle`, {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    showAlert(data.message, 'success');
+                    loadStudents();
+                } else {
+                    showAlert('Gagal mengubah status siswa', 'danger');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error mengubah status', 'danger');
+            }
+        }
+        
+        // ============ FUNGSI ALERT ============
+        // Fungsi untuk menampilkan alert
+        function showAlert(message, type) {
+            const alertDiv = document.getElementById('alert');
+            alertDiv.textContent = message;
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                alertDiv.style.display = 'none';
+            }, 5000);
+        }
+        
+        // ============ FUNGSI MODAL ============
+        // Tutup modal saat klik di luar modal
+        window.onclick = function(event) {
+            const editModal = document.getElementById('editModal');
+            const deleteModal = document.getElementById('deleteModal');
+            
+            if (event.target === editModal) {
+                closeEditModal();
+            }
+            if (event.target === deleteModal) {
+                closeDeleteModal();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Siswa - School QR System</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 20px;
+        }
+        
+        .back-button {
+            margin-bottom: 20px;
+        }
+        
+        .student-card {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .student-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+        
+        .student-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .info-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #6c757d;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 18px;
+            color: #212529;
+        }
+        
+        .qr-section {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            border: 2px dashed #dee2e6;
+            border-radius: 10px;
+        }
+        
+        .qr-code {
+            max-width: 250px;
+            margin: 20px auto;
+        }
+        
+        .attendance-history {
+            margin-top: 40px;
+        }
+        
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .history-table th {
+            background-color: #343a40;
+            color: white;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        .history-table td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        
+        .status-present {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-late {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-absent {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="back-button">
+            <a href="/static/student_management.html" class="btn">
+                <i class="fas fa-arrow-left"></i> Kembali ke Manajemen Siswa
+            </a>
+        </div>
+        
+        <div class="student-card">
+            <div class="student-header">
+                <h1 id="studentName">Loading...</h1>
+                <span id="statusBadge" class="status-badge">Loading...</span>
+            </div>
+            
+            <div class="student-info" id="studentInfo">
+                <!-- Informasi siswa akan diisi oleh JavaScript -->
+            </div>
+            
+            <div class="qr-section">
+                <h3><i class="fas fa-qrcode"></i> QR Code Siswa</h3>
+                <div id="qrCodeContainer">
+                    <img id="qrCodeImage" class="qr-code" alt="QR Code">
+                </div>
+                <p>Scan QR code ini untuk presensi</p>
+                <a id="downloadQR" class="btn btn-primary" href="#">
+                    <i class="fas fa-download"></i> Download QR Code
+                </a>
+            </div>
+        </div>
+        
+        <div class="attendance-history">
+            <h2><i class="fas fa-history"></i> Riwayat Presensi</h2>
+            <table class="history-table" id="attendanceTable">
+                <thead>
+                    <tr>
+                        <th>Tanggal & Waktu</th>
+                        <th>Status</th>
+                        <th>Lokasi</th>
+                    </tr>
+                </thead>
+                <tbody id="attendanceTableBody">
+                    <!-- Data presensi akan diisi oleh JavaScript -->
+                </tbody>
+            </table>
+            <div id="noAttendance" style="display: none; text-align: center; padding: 40px; color: #6c757d;">
+                <i class="fas fa-clipboard fa-3x"></i>
+                <h3>Belum ada riwayat presensi</h3>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Ambil student_id dari URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const studentId = urlParams.get('id');
+        
+        // Load data saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            if (studentId) {
+                loadStudentData(studentId);
+                loadAttendanceHistory(studentId);
+            } else {
+                document.body.innerHTML = '<h1>ID Siswa tidak ditemukan</h1>';
+            }
+        });
+        
+        // Fungsi untuk memuat data siswa
+        async function loadStudentData(id) {
+            try {
+                const response = await fetch(`/student/${id}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const student = data.student;
+                    
+                    // Update informasi siswa
+                    document.getElementById('studentName').textContent = student.name;
+                    
+                    // Update status badge
+                    const statusBadge = document.getElementById('statusBadge');
+                    statusBadge.textContent = student.is_active ? 'AKTIF' : 'TIDAK AKTIF';
+                    statusBadge.className = `status-badge ${student.is_active ? 'status-present' : 'status-absent'}`;
+                    
+                    // Update informasi detail
+                    document.getElementById('studentInfo').innerHTML = `
+                        <div class="info-item">
+                            <div class="info-label">ID Siswa</div>
+                            <div class="info-value">${student.student_id}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Nama Lengkap</div>
+                            <div class="info-value">${student.name}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Kelas</div>
+                            <div class="info-value">${student.class_name}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Tanggal Daftar</div>
+                            <div class="info-value">${new Date(student.created_at).toLocaleDateString('id-ID', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                            })}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Total Presensi</div>
+                            <div class="info-value">${student.total_attendance} kali</div>
+                        </div>
+                    `;
+                    
+                    // Update QR code
+                    const qrCodeImage = document.getElementById('qrCodeImage');
+                    qrCodeImage.src = `/qrcode-view/${id}`;
+                    
+                    // Update download link
+                    document.getElementById('downloadQR').href = `/qrcode/${id}`;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        // Fungsi untuk memuat riwayat presensi
+        async function loadAttendanceHistory(id) {
+            try {
+                const response = await fetch(`/student/${id}`);
+                const data = await response.json();
+                
+                if (data.success && data.student.attendance_history.length > 0) {
+                    const tableBody = document.getElementById('attendanceTableBody');
+                    const noAttendanceDiv = document.getElementById('noAttendance');
+                    
+                    tableBody.innerHTML = '';
+                    document.getElementById('attendanceTable').style.display = 'table';
+                    noAttendanceDiv.style.display = 'none';
+                    
+                    data.student.attendance_history.forEach(record => {
+                        const row = document.createElement('tr');
+                        
+                        const statusClass = record.status === 'present' ? 'status-present' : 
+                                          record.status === 'late' ? 'status-late' : 'status-absent';
+                        
+                        row.innerHTML = `
+                            <td>${record.timestamp}</td>
+                            <td>
+                                <span class="status-badge ${statusClass}">
+                                    ${record.status === 'present' ? 'Tepat Waktu' : 
+                                      record.status === 'late' ? 'Telat' : 'Absen'}
+                                </span>
+                            </td>
+                            <td>${record.location || '-'}</td>
+                        `;
+                        
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    document.getElementById('attendanceTable').style.display = 'none';
+                    document.getElementById('noAttendance').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
